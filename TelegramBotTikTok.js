@@ -11,6 +11,7 @@ if (!fs.existsSync(downloadPath)) {
   fs.mkdirSync(downloadPath);
 }
 
+// Используем актуальную версию node-telegram-bot-api
 const bot = new TelegramBot(botToken, { polling: true });
 
 bot.on('message', async (msg) => {
@@ -59,7 +60,7 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
     bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
 
     // Send video to user
-    bot.sendVideo(chatId, filePath, { caption: `Видео от ${authorUsername}` });
+    bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `Видео от ${authorUsername}` });
 
     // Delete video after sending
     deleteVideo(filePath);
