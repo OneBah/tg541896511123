@@ -13,7 +13,7 @@ bot.on('message', async (msg) => {
 
   if (msg.text === '/start') {
     bot.sendMessage(chatId, 'Привет! Я бот загрузки тикток видео в ВК. Просто отправь мне ссылку на тикток видео, и я загружу его в указанную директорию.');
-  } else if (msg.text.startsWith('https://www.tiktok.com/')) {
+  } else if (isTikTokUrl(msg.text)) {
     try {
       await downloadAndSendVideo(msg.text, chatId);
     } catch (error) {
@@ -61,4 +61,9 @@ function deleteVideo(path) {
 function generateFileName() {
   const date = new Date();
   return `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
+}
+
+function isTikTokUrl(url) {
+  // Use a regular expression to check if the URL is a TikTok URL
+  return /^https:\/\/(www\.)?tiktok\.com\//.test(url) || /^https:\/\/vm\.tiktok\.com\//.test(url);
 }
