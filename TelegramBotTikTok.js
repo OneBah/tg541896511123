@@ -28,6 +28,8 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
   try {
     const result = await TiktokDL(tiktokUrl, { version: "v1" });
 
+    console.log('Ответ от TikTok API:', result); // Выводим ответ в консоль
+
     if (!result || !result.result || !result.result.author) {
       throw new Error('Некорректный формат ответа от TikTok API');
     }
@@ -61,6 +63,7 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
     console.error(errorMessage); // Выводим ошибку в консоль для отладки
   }
 }
+
 
 
 
