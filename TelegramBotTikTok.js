@@ -4,7 +4,12 @@ const fs = require('fs');
 const { TiktokDL } = require("@tobyg74/tiktok-api-dl");
 
 const botToken = '6739576468:AAGffK_kgGCwdx8K5xF4Kdi9zMEFRI3qxMo';
-const downloadPath = `${__dirname}/download`; // Изменение этой строки
+const downloadPath = `${__dirname}/download`;
+
+// Проверяем, существует ли каталог download, и если нет, создаем его
+if (!fs.existsSync(downloadPath)) {
+  fs.mkdirSync(downloadPath);
+}
 
 const bot = new TelegramBot(botToken, { polling: true });
 
@@ -28,8 +33,8 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
   try {
     const result = await TiktokDL(tiktokUrl, { version: "v1" });
 
-    console.log('Ответ от TikTok API:', result); // Выводим ответ в консоль
-    console.log('Статус ответа от TikTok API:', result.status); // Выводим статус ответа в консоль
+    console.log('Ответ от TikTok API:', result);
+    console.log('Статус ответа от TikTok API:', result.status);
 
     if (!result || !result.result || !result.result.author) {
       throw new Error('Некорректный формат ответа от TikTok API');
@@ -61,21 +66,33 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
   } catch (error) {
     const errorMessage = `Произошла ошибка: ${error.message}`;
     bot.sendMessage(chatId, errorMessage);
-    console.error(errorMessage); // Выводим ошибку в консоль для отладки
+    console.error(errorMessage);
   }
 }
 
+// Остальной код...
 
-
-
-async function downloadVideo(url, path) {
-  const response = await fetch(url);
-  const buffer = await response.buffer();
-  fs.writeFileSync(path, buffer);
+function downloadVideo(url, path) {
+  return new Promise((resolve, reject) => {
+    const fileStream = fs.createWriteStream(path);
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to download video: ${response.statusText}`);
+        }
+        response.body.pipe(fileStream);
+        fileStream.on('finish', () => {
+          fileStream.close();
+          resolve();
+        });
+      })
+      .catch(error => {
+        reject(error);
+      });
+  });
 }
 
 function deleteVideo(path) {
-  // Delete the file
   fs.unlinkSync(path);
 }
 
@@ -85,6 +102,5 @@ function generateFileName() {
 }
 
 function isTikTokUrl(url) {
-  // Use a regular expression to check if the URL is a TikTok URL
   return /^https:\/\/(www\.)?tiktok\.com\//.test(url) || /^https:\/\/vm\.tiktok\.com\//.test(url);
 }
