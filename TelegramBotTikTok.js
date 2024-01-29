@@ -4,7 +4,7 @@ const fs = require('fs');
 const { TiktokDL } = require("@tobyg74/tiktok-api-dl");
 
 const botToken = '6739576468:AAGffK_kgGCwdx8K5xF4Kdi9zMEFRI3qxMo';
-const downloadPath = '/';
+const downloadPath = '/dowload';
 
 const bot = new TelegramBot(botToken, { polling: true });
 
