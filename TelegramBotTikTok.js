@@ -55,6 +55,8 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
 
     // Save video to file
     await downloadVideo(videoUrl, filePath);
+    console.log('Сохранение файла по пути:', filePath);
+
 
     // Send message with details
     bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
