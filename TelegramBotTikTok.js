@@ -46,7 +46,7 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
     const description = result.result.description;
     const videoUrl = result.result.video[0];
 
-    if (!authorUsername || !id || !description || !videoUrl) {
+    if (!authorUsername || !id || !videoUrl) {
       throw new Error('Отсутствуют необходимые данные в ответе от TikTok API');
     }
 
