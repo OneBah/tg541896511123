@@ -1,11 +1,10 @@
-await (new Promise((resolve, reject) => {
-	const TelegramBot = require('node-telegram-bot-api');
+const TelegramBot = require('node-telegram-bot-api');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const { TiktokDL } = require("@tobyg74/tiktok-api-dl");
 
 const botToken = '6739576468:AAGffK_kgGCwdx8K5xF4Kdi9zMEFRI3qxMo';
-const downloadPath = '/d';
+const downloadPath = '/';
 
 const bot = new TelegramBot(botToken, { polling: true });
 
@@ -43,6 +42,9 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
 
   // Send video to user
   bot.sendVideo(chatId, filePath, { caption: `Видео от ${authorUsername}` });
+
+  // Delete video after sending
+  deleteVideo(filePath);
 }
 
 async function downloadVideo(url, path) {
@@ -51,10 +53,12 @@ async function downloadVideo(url, path) {
   fs.writeFileSync(path, buffer);
 }
 
+function deleteVideo(path) {
+  // Delete the file
+  fs.unlinkSync(path);
+}
+
 function generateFileName() {
   const date = new Date();
   return `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
 }
-
-	resolve()
-}));
