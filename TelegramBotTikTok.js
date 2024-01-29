@@ -25,27 +25,37 @@ bot.on('message', async (msg) => {
 });
 
 async function downloadAndSendVideo(tiktokUrl, chatId) {
-  const result = await TiktokDL(tiktokUrl, { version: "v1" });
-  const authorUsername = result.result.author.username;
-  const id = result.result.id;
-  const description = result.result.description;
-  const videoUrl = result.result.video[0];
+  try {
+    const result = await TiktokDL(tiktokUrl, { version: "v1" });
 
-  const fileName = generateFileName();
-  const filePath = `${downloadPath}/${fileName}.mp4`;
+    if (!result || !result.result || !result.result.author) {
+      throw new Error('Некорректный формат ответа от TikTok API');
+    }
 
-  // Save video to file
-  await downloadVideo(videoUrl, filePath);
+    const authorUsername = result.result.author.username;
+    const id = result.result.id;
+    const description = result.result.description;
+    const videoUrl = result.result.video[0];
 
-  // Send message with details
-  bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
+    const fileName = generateFileName();
+    const filePath = `${downloadPath}/${fileName}.mp4`;
 
-  // Send video to user
-  bot.sendVideo(chatId, filePath, { caption: `Видео от ${authorUsername}` });
+    // Save video to file
+    await downloadVideo(videoUrl, filePath);
 
-  // Delete video after sending
-  deleteVideo(filePath);
+    // Send message with details
+    bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
+
+    // Send video to user
+    bot.sendVideo(chatId, filePath, { caption: `Видео от ${authorUsername}` });
+
+    // Delete video after sending
+    deleteVideo(filePath);
+  } catch (error) {
+    bot.sendMessage(chatId, `Произошла ошибка: ${error.message}`);
+  }
 }
+
 
 async function downloadVideo(url, path) {
   const response = await fetch(url);
