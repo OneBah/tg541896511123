@@ -37,6 +37,10 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
     const description = result.result.description;
     const videoUrl = result.result.video[0];
 
+    if (!authorUsername || !id || !description || !videoUrl) {
+      throw new Error('Отсутствуют необходимые данные в ответе от TikTok API');
+    }
+
     const fileName = generateFileName();
     const filePath = `${downloadPath}/${fileName}.mp4`;
 
@@ -52,9 +56,12 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
     // Delete video after sending
     deleteVideo(filePath);
   } catch (error) {
-    bot.sendMessage(chatId, `Произошла ошибка: ${error.message}`);
+    const errorMessage = `Произошла ошибка: ${error.message}`;
+    bot.sendMessage(chatId, errorMessage);
+    console.error(errorMessage); // Выводим ошибку в консоль для отладки
   }
 }
+
 
 
 async function downloadVideo(url, path) {
