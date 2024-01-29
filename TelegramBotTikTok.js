@@ -7,9 +7,7 @@ const botToken = '6739576468:AAGffK_kgGCwdx8K5xF4Kdi9zMEFRI3qxMo';
 const downloadPath = `${__dirname}/download`;
 
 // Проверяем, существует ли каталог download, и если нет, создаем его
-if (!fs.existsSync(downloadPath)) {
-  fs.mkdirSync(downloadPath);
-}
+fs.existsSync(downloadPath) || fs.mkdirSync(downloadPath);
 
 // Используем актуальную версию node-telegram-bot-api
 const bot = new TelegramBot(botToken, { polling: true });
@@ -23,7 +21,7 @@ bot.on('message', async (msg) => {
     try {
       await downloadAndSendVideo(msg.text, chatId);
     } catch (error) {
-      bot.sendMessage(chatId, `Произошла ошибка: ${error.message}`);
+      handleError(chatId, error);
     }
   } else {
     bot.sendMessage(chatId, 'Пожалуйста, отправь мне ссылку на тикток видео.');
@@ -34,82 +32,59 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
   try {
     const result = await TiktokDL(tiktokUrl, { version: "v1" });
 
-    console.log('Ответ от TikTok API:', result);
-    console.log('Статус ответа от TikTok API:', result.status);
+    validateTikTokApiResponse(result);
 
-    if (!result || !result.result || !result.result.author) {
-      throw new Error('Некорректный формат ответа от TikTok API');
-    }
+    const { author, id, description, video } = result.result;
+    const authorUsername = author.username;
+    const videoUrl = video[0];
 
-    const authorUsername = result.result.author.username;
-    const id = result.result.id;
-    const description = result.result.description;
-    const videoUrl = result.result.video[0];
+    validateVideoData(authorUsername, id, videoUrl);
 
-    if (!authorUsername || !id || !videoUrl) {
-      throw new Error('Отсутствуют необходимые данные в ответе от TikTok API');
-    }
+    const filePath = saveVideoToFile(videoUrl);
 
-    const fileName = generateFileName();
-    const filePath = `${downloadPath}/${fileName}.mp4`;
-
-    // Save video to file
-    await downloadVideo(videoUrl, filePath);
-    console.log('Сохранение файла по пути:', filePath);
-
-    // Send message with details
-    bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
-
-    // Send video to user
-    bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `Видео от ${authorUsername}` })
-      .then(() => {
-        // Delete video after sending
-        deleteVideo(filePath);
-      })
-      .catch((sendError) => {
-        console.error('Ошибка при отправке видео:', sendError);
-        // If there's an error sending, still try to delete the video
-        deleteVideo(filePath);
-      });
+    sendVideoToUser(chatId, authorUsername, id, description, filePath);
   } catch (error) {
-    const errorMessage = `Произошла ошибка: ${error.message}`;
-    bot.sendMessage(chatId, errorMessage);
-    console.error(errorMessage);
+    handleError(chatId, error);
   }
 }
 
-
 // Остальной код...
 
-function downloadVideo(url, path) {
-  return new Promise((resolve, reject) => {
-    const fileStream = fs.createWriteStream(path);
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to download video: ${response.statusText}`);
-        }
-        response.body.pipe(fileStream);
-        fileStream.on('finish', () => {
-          fileStream.close();
-          resolve();
-        });
-      })
-      .catch(error => {
-        reject(error);
-      });
-  });
+function validateTikTokApiResponse(result) {
+  if (!result || !result.result || !result.result.author) {
+    throw new Error('Некорректный формат ответа от TikTok API');
+  }
 }
 
-function deleteVideo(path) {
-  fs.unlinkSync(path);
+function validateVideoData(authorUsername, id, videoUrl) {
+  if (!authorUsername || !id || !videoUrl) {
+    throw new Error('Отсутствуют необходимые данные в ответе от TikTok API');
+  }
 }
 
-function generateFileName() {
-  const date = new Date();
-  return `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDate()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`;
+function saveVideoToFile(videoUrl) {
+  const fileName = generateFileName();
+  const filePath = `${downloadPath}/${fileName}.mp4`;
+  downloadVideo(videoUrl, filePath);
+  console.log('Сохранение файла по пути:', filePath);
+  return filePath;
 }
 
-function isTikTokUrl(url) {
-  return /^https:\/\/(www\.)?tiktok\.com\//.test(url) || /^https:\/\/vm\.tiktok\.com\//.test(url);
+function sendVideoToUser(chatId, authorUsername, id, description, filePath) {
+  bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
+
+  bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `Видео от ${authorUsername}` })
+    .then(() => deleteVideo(filePath))
+    .catch((sendError) => {
+      console.error('Ошибка при отправке видео:', sendError);
+      deleteVideo(filePath);
+    });
 }
+
+function handleError(chatId, error) {
+  const errorMessage = `Произошла ошибка: ${error.message}`;
+  bot.sendMessage(chatId, errorMessage);
+  console.error(errorMessage);
+}
+
+// Остальной код...
