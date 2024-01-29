@@ -57,21 +57,27 @@ async function downloadAndSendVideo(tiktokUrl, chatId) {
     await downloadVideo(videoUrl, filePath);
     console.log('Сохранение файла по пути:', filePath);
 
-
     // Send message with details
     bot.sendMessage(chatId, `Видео успешно загружено!\nАвтор: ${authorUsername}\nID: ${id}\nОписание: ${description}`);
 
     // Send video to user
-    bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `Видео от ${authorUsername}` });
-
-    // Delete video after sending
-    deleteVideo(filePath);
+    bot.sendVideo(chatId, fs.createReadStream(filePath), { caption: `Видео от ${authorUsername}` })
+      .then(() => {
+        // Delete video after sending
+        deleteVideo(filePath);
+      })
+      .catch((sendError) => {
+        console.error('Ошибка при отправке видео:', sendError);
+        // If there's an error sending, still try to delete the video
+        deleteVideo(filePath);
+      });
   } catch (error) {
     const errorMessage = `Произошла ошибка: ${error.message}`;
     bot.sendMessage(chatId, errorMessage);
     console.error(errorMessage);
   }
 }
+
 
 // Остальной код...
 
