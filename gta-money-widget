@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>GTA Hold Money FX</title>
+<style>
+  body { 
+    margin: 0; 
+    height: 100vh; 
+    overflow: hidden; 
+    background: transparent; 
+    cursor: crosshair;
+    user-select: none; /* Запрещает выделение текста при зажатии */
+    touch-action: none; /* Отключает скролл на мобильных при удержании */
+  }
+
+  /* --- 3D СЦЕНА --- */
+  .scene-3d {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    perspective: 1200px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .bill-float {
+    animation: float 4s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+
+  .bill-3d {
+    width: 260px; height: 130px;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: spin 8s linear infinite;
+  }
+
+  .face {
+    position: absolute;
+    backface-visibility: hidden;
+    box-sizing: border-box;
+    border: 1px solid #064a22;
+  }
+
+  .front, .back {
+    width: 260px; height: 130px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #1a7a3a;
+  }
+
+  .front { transform: translateZ(8px); }
+  .back  { transform: rotateY(180deg) translateZ(8px); }
+
+  .edge { background-color: #0d6b32; }
+  
+  .edge-y {
+    width: 260px; height: 16px; left: 0; top: 57px;
+    background-image: repeating-linear-gradient(to right, transparent, transparent 1px, rgba(0,0,0,0.4) 1px, rgba(0,0,0,0.4) 3px);
+  }
+  
+  .edge-x {
+    width: 16px; height: 130px; left: 122px; top: 0;
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 1px, rgba(0,0,0,0.4) 1px, rgba(0,0,0,0.4) 3px);
+  }
+
+  .top    { transform: rotateX(90deg) translateZ(65px); }
+  .bottom { transform: rotateX(-90deg) translateZ(65px); }
+  .right  { transform: rotateY(90deg) translateZ(130px); }
+  .left   { transform: rotateY(-90deg) translateZ(130px); }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+  @keyframes spin {
+    0%   { transform: rotateX(15deg) rotateY(0deg) rotateZ(-10deg); }
+    100% { transform: rotateX(15deg) rotateY(360deg) rotateZ(-10deg); }
+  }
+
+  /* --- ЭФФЕКТЫ --- */
+  .fx-layer {
+    position: absolute; inset: 0; z-index: 10; pointer-events: none;
+  }
+
+  .bill-fly {
+    position: absolute; width: 34px; height: 18px;
+    background: linear-gradient(135deg, #38e878, #1a9e4a);
+    border: 1.5px solid #0f5a2a; border-radius: 4px;
+    color: #d6ffe0; font: 900 12px 'Arial Black', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 12px #2ee66e, inset 0 0 4px rgba(255,255,255,0.5);
+    will-change: transform, opacity;
+  }
+  
+  .txt {
+    position: absolute; font: 900 56px Impact, sans-serif;
+    color: #4DB84B; white-space: nowrap;
+    text-shadow: -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 
+                 4px 4px 0 #000, -4px 0 0 #000, 4px 0 0 #000, 
+                 0 -4px 0 #000, 0 4px 0 #000, 6px 6px 0 #000;
+    will-change: transform, opacity;
+  }
+  
+  .sprk {
+    position: absolute; width: 8px; height: 8px;
+    border-radius: 50%; background: #fff;
+    box-shadow: 0 0 10px #ffe066, 0 0 20px #ffb800;
+    will-change: transform, opacity;
+  }
+</style>
+</head>
+<body>
+
+<div class="scene-3d">
+  <div class="bill-float">
+    <div class="bill-3d">
+      
+      <div class="face front">
+        <svg viewBox="0 0 260 130" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgFront" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#4ade80"/>
+              <stop offset="100%" stop-color="#16a34a"/>
+            </linearGradient>
+          </defs>
+          <rect width="260" height="130" fill="url(#bgFront)"/>
+          <rect x="6" y="6" width="248" height="118" fill="none" stroke="#065f46" stroke-width="3" rx="6"/>
+          <rect x="14" y="14" width="232" height="102" fill="none" stroke="#bbf7d0" stroke-width="1.5" stroke-dasharray="8 6" rx="3" opacity="0.6"/>
+          <text x="22" y="32" font-family="Impact, sans-serif" font-size="18" fill="#065f46">100</text>
+          <text x="238" y="32" font-family="Impact, sans-serif" font-size="18" fill="#065f46" text-anchor="end">100</text>
+          <text x="22" y="116" font-family="Impact, sans-serif" font-size="18" fill="#065f46">100</text>
+          <text x="238" y="116" font-family="Impact, sans-serif" font-size="18" fill="#065f46" text-anchor="end">100</text>
+          <ellipse cx="130" cy="65" rx="45" ry="55" fill="#bbf7d0" stroke="#065f46" stroke-width="3"/>
+          <text x="130" y="88" font-family="Impact, sans-serif" font-size="70" fill="#065f46" text-anchor="middle">$</text>
+        </svg>
+      </div>
+
+      <div class="face back">
+        <svg viewBox="0 0 260 130" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bgBack" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#4ade80"/>
+              <stop offset="100%" stop-color="#16a34a"/>
+            </linearGradient>
+          </defs>
+          <rect width="260" height="130" fill="url(#bgBack)"/>
+          <rect x="6" y="6" width="248" height="118" fill="none" stroke="#065f46" stroke-width="3" rx="6"/>
+          <rect x="14" y="14" width="232" height="102" fill="none" stroke="#bbf7d0" stroke-width="1.5" stroke-dasharray="8 6" rx="3" opacity="0.6"/>
+          <polygon points="130,25 185,95 75,95" fill="#16a34a" stroke="#065f46" stroke-width="2"/>
+          <rect x="75" y="95" width="110" height="10" fill="#16a34a" stroke="#065f46" stroke-width="2"/>
+          <ellipse cx="130" cy="55" rx="14" ry="8" fill="#bbf7d0" stroke="#065f46" stroke-width="2"/>
+          <circle cx="130" cy="55" r="4" fill="#065f46"/>
+        </svg>
+      </div>
+
+      <div class="face edge edge-y top"></div>
+      <div class="face edge edge-y bottom"></div>
+      <div class="face edge edge-x right"></div>
+      <div class="face edge edge-x left"></div>
+
+    </div>
+  </div>
+</div>
+
+<div class="fx-layer" id="fx"></div>
+
+<script>
+  const fx = document.getElementById('fx');
+  const rand = (a, b) => Math.random() * (b - a) + a;
+
+  function spawnBills(x, y) {
+    for (let i = 0; i < 6; i++) { // Чуть уменьшил количество при зажатии, чтобы не лагало
+      const el = document.createElement('div');
+      el.className = 'bill-fly'; el.textContent = '$';
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      fx.appendChild(el);
+      
+      const angle = rand(-Math.PI * 0.9, -Math.PI * 0.1), speed = rand(150, 300);
+      const vx = Math.cos(angle) * speed, vy = Math.sin(angle) * speed;
+      const rot = rand(-720, 720), dur = rand(1200, 1800), start = performance.now();
+      
+      (function step(now) {
+        const t = Math.min((now - start) / dur, 1), dt = (now - start) / 1000;
+        const dx = vx * dt * (1 - 0.5 * t), dy = vy * dt + 350 * dt * dt;
+        el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot * t}deg) scale(${1 + 0.1 * Math.sin(t * Math.PI)})`;
+        el.style.opacity = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+        t < 1 ? requestAnimationFrame(step) : el.remove();
+      })(start);
+    }
+  }
+
+  function spawnText(x, y) {
+    const el = document.createElement('div');
+    el.className = 'txt'; el.textContent = `+$${Math.floor(rand(15, 999))}`;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    fx.appendChild(el);
+
+    const vx = rand(-40, 40), vy = rand(-200, -120), dur = 1300, start = performance.now();
+    
+    (function step(now) {
+      const t = Math.min((now - start) / dur, 1), dt = (now - start) / 1000;
+      const dx = vx * dt * (1 - 0.4 * t), dy = vy * dt + 180 * dt * dt;
+      const scale = t < 0.1 ? 1 + t * 3 : 1.3 - t * 0.3;
+      el.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+      el.style.opacity = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
+      t < 1 ? requestAnimationFrame(step) : el.remove();
+    })(start);
+  }
+
+  function spawnSparks(x, y) {
+    for (let i = 0; i < 8; i++) {
+      const el = document.createElement('div');
+      el.className = 'sprk';
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      fx.appendChild(el);
+
+      const angle = rand(-Math.PI, 0), speed = rand(100, 250);
+      const vx = Math.cos(angle) * speed, vy = Math.sin(angle) * speed;
+      const dur = rand(400, 700), start = performance.now();
+
+      (function step(now) {
+        const t = Math.min((now - start) / dur, 1), dt = (now - start) / 1000;
+        const dx = vx * dt, dy = vy * dt + 350 * dt * dt;
+        el.style.transform = `translate(${dx}px, ${dy}px) scale(${1 - t})`;
+        el.style.opacity = 1 - t;
+        t < 1 ? requestAnimationFrame(step) : el.remove();
+      })(start);
+    }
+  }
+
+  function triggerEffect(x, y) {
+    spawnBills(x, y);
+    spawnText(x, y);
+    spawnSparks(x, y);
+  }
+
+  // --- ЛОГИКА УДЕРЖАНИЯ И КЛИКА ---
+  let holdTimer = null;
+  let lastX = 0, lastY = 0;
+
+  document.body.addEventListener('pointerdown', (e) => {
+    // Игнорируем правую кнопку мыши
+    if (e.pointerType === 'mouse' && e.button !== 0) return; 
+
+    lastX = e.clientX;
+    lastY = e.clientY;
+    
+    // Срабатывает сразу при клике
+    triggerEffect(lastX, lastY);
+
+    // Запускает поток эффектов при удержании (каждые 120 мс)
+    if (holdTimer) clearInterval(holdTimer);
+    holdTimer = setInterval(() => {
+      triggerEffect(lastX, lastY);
+    }, 120);
+  });
+
+  // Обновляем координаты, если водим мышкой с зажатой кнопкой
+  document.body.addEventListener('pointermove', (e) => {
+    if (holdTimer) {
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }
+  });
+
+  // Останавливаем поток при отпускании кнопки
+  const stopHold = () => {
+    if (holdTimer) {
+      clearInterval(holdTimer);
+      holdTimer = null;
+    }
+  };
+
+  // Отслеживаем отпускание везде (включая выход за пределы окна)
+  window.addEventListener('pointerup', stopHold);
+  window.addEventListener('pointercancel', stopHold);
+  window.addEventListener('blur', stopHold);
+
+  // --- АВТОМАТИЧЕСКИЙ ТАЙМЕР (каждые 1.5 сек) ---
+  setInterval(() => {
+    const x = (window.innerWidth / 2) + rand(20, 60);
+    const y = (window.innerHeight / 2) + rand(20, 60);
+    triggerEffect(x, y);
+  }, 1500);
+
+</script>
+</body>
+</html>
